@@ -50,7 +50,7 @@ info('*** Adding hosts\n')
 
 hosts={}
 for i in range(1,SWITCHES_NUM):
-    hosts[i] = net.addDocker('d%u' % i, cls=P4DockerHost, ip='10.0.0.10%u/24' % i, mac="00:00:00:00:00:0%u" % i, dimage="erap320:dind")
+    hosts[i] = net.addDocker('d%u' % i, cls=P4DockerHost, ip='10.0.0.10%u/24' % i, mac="00:00:00:00:00:0%u" % i, dimage="erap320:dind", volumes=["/sys/kernel/debug:/sys/kernel/debug","/sys/fs/cgroup:/sys/fs/cgroup","/sys/fs/bpf:/sys/fs/bpf","/lib/modules:/lib/modules","/sys:/sys","/usr/src:/usr/src"])
     hosts[i].start()
 
 info('*** Creating links\n')
