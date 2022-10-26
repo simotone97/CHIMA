@@ -1,3 +1,4 @@
 pytest
 pyroute2
 flask
+requests
