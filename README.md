@@ -50,7 +50,19 @@ sudo service influxdb start
 ```
 sudo service influxdb status
 ```
-
+- InfluxDB starts a webserver at localhost:8086. If you use Vagrant you should add a portforwarding into your Vagrantfile. For example add this line
+```
+config.vm.network :forwarded_port, host: 4567, guest: 8086
+```
+- Open the webserver at localhost:4567 and create an access account, a bucket called "CHIMA" and an API key for full access. Copy this key and add it as an environmental variable
+```
+sudo nano /etc/environment
+```
+- Then add in a new line the following
+```
+INFLUXDB_TOKEN=your_API_key_value
+```
+- Restart to be sure the global variable is loaded into the system
 
 
 ## Running tests
