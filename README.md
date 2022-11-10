@@ -37,6 +37,22 @@ cd ~/CHIMA
 
 - Log out of your current session and log back in to ensure the correct loading of groups, environment variables and bash profile
 
+- Install InfluxDB
+```
+wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.0.9-amd64.deb
+sudo dpkg -i influxdb2-2.0.9-amd64.deb
+```
+-Start the service
+```
+sudo service influxdb start
+```
+-The service should run automatically at every restart. You can restart and check with
+```
+sudo service influxdb status
+```
+
+
+
 ## Running tests
 After all the installation steps have been completed, tests can be executed.
 
