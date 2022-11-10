@@ -35,8 +35,6 @@ cd ~/CHIMA
 ./install/framework/install-framework.sh
 ```
 
-- Log out of your current session and log back in to ensure the correct loading of groups, environment variables and bash profile
-
 - Install InfluxDB
 ```
 wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.0.9-amd64.deb
@@ -62,7 +60,7 @@ sudo nano /etc/environment
 ```
 INFLUXDB_TOKEN=your_API_key_value
 ```
-- Restart to be sure the global variable is loaded into the system
+- Log out of your current session and log back in to ensure the correct loading of groups, environment variables and bash profile
 
 
 ## Running tests
