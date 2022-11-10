@@ -52,7 +52,7 @@ sudo service influxdb status
 ```
 config.vm.network :forwarded_port, host: 4567, guest: 8086
 ```
-- Open the webserver at localhost:4567 and create an access account, a bucket called "CHIMA" and an API key for full access. Copy this key and add it as an environmental variable
+- Open the webserver at localhost:4567 and create an access account, a bucket called "CHIMA", organization called "PoliMi" and an API key for full access. Copy this key and add it as an environmental variable
 ```
 sudo nano /etc/environment
 ```
