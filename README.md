@@ -42,11 +42,11 @@ cd ~/CHIMA
 wget https://dl.influxdata.com/influxdb/releases/influxdb2-2.0.9-amd64.deb
 sudo dpkg -i influxdb2-2.0.9-amd64.deb
 ```
--Start the service
+- Start the service
 ```
 sudo service influxdb start
 ```
--The service should run automatically at every restart. You can restart and check with
+- The service should run automatically at every restart. You can restart and check with
 ```
 sudo service influxdb status
 ```
