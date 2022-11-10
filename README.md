@@ -109,4 +109,4 @@ sudo -E ./test.exp minimal 0.1 3
 
 ### Collecting results
 After a test is completed, its results can be found in the `$CHIMA_ROOT/measurements/Times` directory.
-Text files containing the recorded measurements are named according to the timestamp at which they are generated, the name of the used topology, and the value of the two parameters.
+Text files containing the recorded measurements are named according to the timestamp at which they are generated, the name of the used topology, and the value of the two parameters. It is also possible to explore the telemetry data at localhost:4567
