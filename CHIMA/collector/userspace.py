@@ -9,7 +9,10 @@ from components import *
 from metrics import *
 from deployment import redeploy
 
-##########################################################################
+import socket
+import json
+
+'''
 import influxdb_client
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -20,7 +23,7 @@ url = "http://localhost:8086"
 
 client = influxdb_client.InfluxDBClient(url=url, token=token, org=org)
 bucket="CHIMA"
-##########################################################################
+'''
 
 DEBUG = True
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
@@ -87,7 +90,7 @@ class INT_collector(object):
                         # logging.debug("New gauge: LINK_KEY = (%u,%u) JITTER = %u" \
                         # % (link_key.switch_id_1, link_key.switch_id_2, link_metrics.jitter))
                     
-                    ##########################################################################
+                    '''
                     write_api = client.write_api(write_options=SYNCHRONOUS)
 
                     point = (Point("collector_data").field('latency %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), link_metrics.latency))
@@ -95,7 +98,14 @@ class INT_collector(object):
 
                     point = (Point("collector_data").field('jitter %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), link_metrics.jitter))
                     write_api.write(bucket=bucket, org="PoliMi", record=point)
-                    ##########################################################################
+                    '''
+                    
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+                    sock.sendto(json.dumps({'metric_name': 'latency %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'value1': link_metrics.latency}).encode(),('localhost', 8094))
+                    sock.sendto(json.dumps({'metric_name': 'jitter %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'value1': link_metrics.jitter}).encode(),('localhost', 8094))
+                    
+                    sock.close()
                     
                     gauges[latency_label].set(link_metrics.latency)
                     gauges[jitter_label].set(link_metrics.jitter)
