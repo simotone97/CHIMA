@@ -5,7 +5,7 @@ set home $env(CHIMA_ROOT)
 set measure "$home/measurements"
 
 #start telegraf service
-spawn telegraf --config $measure/telegraf.conf
+#spawn telegraf --config $measure/telegraf.conf
 
 #start mininet
 spawn make -C $home/measurements/minimal/topology

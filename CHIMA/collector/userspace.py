@@ -12,7 +12,6 @@ from deployment import redeploy
 import socket
 import json
 
-
 DEBUG = True
 logging.basicConfig(level=logging.DEBUG if DEBUG else logging.INFO)
 
@@ -54,9 +53,9 @@ class INT_collector(object):
         #Prometheus exporter
         start_http_server(8000)
         gauges = self.gauges
-
         #logging.info("POLLING_INTERVAL is %d" % (self.POLLING_INTERVAL))
         #logging.info("Printing stats, hit CTRL+C to stop")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while True:
             try:
                 current_time = time.time()
@@ -67,7 +66,7 @@ class INT_collector(object):
                     label = str(link_key.switch_id_1)+"_"+str(link_key.switch_id_2)
                     latency_label = "l_" + label
                     jitter_label = "j_" + label
-                    
+
                     if latency_label not in gauges:
                         gauges[latency_label] = Gauge(latency_label, 'Latency of the link')
                         # logging.debug("New gauge: LINK_KEY = (%u,%u) LATENCY = %u" \
@@ -77,11 +76,11 @@ class INT_collector(object):
                         gauges[jitter_label] = Gauge(jitter_label, 'Jitter of the link')
                         # logging.debug("New gauge: LINK_KEY = (%u,%u) JITTER = %u" \
                         # % (link_key.switch_id_1, link_key.switch_id_2, link_metrics.jitter))
-                        
-                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
                     sock.sendto(json.dumps({'metric_name': 'latency %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'value1': link_metrics.latency}).encode(),('localhost', 8094))
                     sock.sendto(json.dumps({'metric_name': 'jitter %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'value1': link_metrics.jitter}).encode(),('localhost', 8094))
-                    sock.close()
+                    #sock.sendto(json.dumps({'metric_name': 'contatore', 'value1': link_metrics.counter}).encode(),('localhost', 8094))  ##DEBUGGING
+                    #print(link_metrics.counter)  ##DEBUGGING
 
                     gauges[latency_label].set(link_metrics.latency)
                     gauges[jitter_label].set(link_metrics.jitter)
@@ -96,13 +95,13 @@ class INT_collector(object):
 
                     # logging.debug("LINK_KEY = (%u,%u) LATENCY = %u" \
                     # % (link_key.switch_id_1, link_key.switch_id_2, link_metrics.latency))
-                
-                #Perform a check to see if any trigger was exceeded
+                    #Perform a check to see if any trigger was exceeded
                 deployment = check_triggers(triggers)
 
                 if deployment != None:
                         redeploy(deployment.depFile, deployment.next)
             except KeyboardInterrupt:
+                sock.close()
                 logging.info("Removing filter from device")
                 self.remove_bpf_program()
-                break   
+                break

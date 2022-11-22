@@ -7,17 +7,16 @@
 
 BPF_HASH(link_metrics_map, struct link_key_t, struct link_metrics_t, HASHMAP_LINK_SIZE);
 BPF_HASH(last_link_latency_map, struct link_key_t, uint32_t, HASHMAP_LINK_SIZE);
-
+/*
 static inline
-uint32_t compute_ewma_unsigned(uint32_t measure, uint32_t avg_measures) {
-    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);
-}
-
-static inline
-int32_t compute_ewma_signed(int32_t measure, int32_t avg_measures) {
-    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);
-}
-
+uint32_t compute_ewma_unsigned(uint32_t measure, uint32_t avg_measures) {          #############################################
+    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);      #                                           #
+                                                                                   #                                           #
+static inline                                                                      #                DEPRECATED                 #
+int32_t compute_ewma_signed(int32_t measure, int32_t avg_measures) {               #                                           #
+    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);      #                                           #
+}                                                                                  #############################################
+*/
 int collector(struct xdp_md *ctx) {
     void* data_end = (void*)(long)ctx->data_end;
     void* cursor = (void*)(long)ctx->data;
@@ -44,30 +43,41 @@ int collector(struct xdp_md *ctx) {
         CURSOR_ADVANCE(eth, cursor, sizeof(struct ethhdr), data_end);
         uint16_t eth_proto = ntohs(eth->h_proto);
         uint16_t vlan_id;
-        if (eth_proto == ETH_P_8021Q){
+        if (eth_proto == ETH_P_8021Q)
+        {
             struct vlan_hdr* vlan;
             CURSOR_ADVANCE(vlan, cursor, sizeof(struct vlan_hdr), data_end);
             if (ntohs(vlan->h_vlan_encapsulated_proto) != ETH_P_IP) return XDP_DROP;
             vlan_id = ntohs(vlan->h_vlan_TCI) & 0x0FFF;
-        } else if ( eth_proto == ETH_P_IP){
-        // If the packet is untagged the default VLAN id is 0.
-            vlan_id = 0;
-        } else
-            return XDP_DROP;
-
+        }
+        else
+        {
+           if ( eth_proto == ETH_P_IP)
+           {
+              // If the packet is untagged the default VLAN id is 0.
+              vlan_id = 0;
+           }
+           else
+              return XDP_DROP;
+        }
         CURSOR_ADVANCE(ip, cursor, sizeof(struct iphdr), data_end);
         uint8_t remain_size;
-        if (ip->protocol == IPPROTO_TCP){
-            struct tcphdr *tcp;
-            CURSOR_ADVANCE(tcp, cursor, sizeof(struct tcphdr), data_end);
-            if (tcp->doff >= 5)
-                remain_size = tcp->doff*4 - sizeof(struct tcphdr);
-            else
-                return XDP_DROP;
-        } else if (ip->protocol == IPPROTO_UDP) {
-            remain_size = sizeof(struct udphdr);
-        } else
-            return XDP_DROP;
+        if (ip->protocol == IPPROTO_TCP)
+        {
+           struct tcphdr *tcp;
+           CURSOR_ADVANCE(tcp, cursor, sizeof(struct tcphdr), data_end);
+           if (tcp->doff >= 5)
+              remain_size = tcp->doff*4 - sizeof(struct tcphdr);
+           else
+              return XDP_DROP;
+        }
+        else
+           if (ip->protocol == IPPROTO_UDP)
+           {
+             remain_size = sizeof(struct udphdr);
+           }
+           else
+             return XDP_DROP;
         CURSOR_ADVANCE_NO_PARSE(cursor, remain_size, data_end);
 
         struct INT_shim_t *int_shim;
@@ -106,7 +116,6 @@ int collector(struct xdp_md *ctx) {
             link_key.switch_id_1 = ntohl(int_data->sw_id);
             link_key.switch_id_2 = ntohl(previous_int_data->sw_id);
             latency = ntohl(previous_int_data->ingressTimestamp) - ntohl(int_data->egressTimestamp);
-
             previous_int_data = int_data;
 
             uint32_t function_id_1 = link_key.switch_id_1 >> 14;
@@ -120,7 +129,7 @@ int collector(struct xdp_md *ctx) {
                 link_key.switch_id_1 = function_id_2;
                 link_key.switch_id_2 = function_id_2;
             }
-            
+
             link_metrics_ptr = link_metrics_map.lookup(&link_key);
             last_latency_ptr = last_link_latency_map.lookup(&link_key);
 
@@ -129,14 +138,30 @@ int collector(struct xdp_md *ctx) {
                 uint32_t new_latency = latency;
                 link_metrics_map.update(&link_key, &link_metrics);
                 last_link_latency_map.update(&link_key, &new_latency);
-            } else {
-                jitter = latency - *last_latency_ptr;
-                link_metrics_ptr->latency = compute_ewma_unsigned(latency, link_metrics_ptr->latency);
-                link_metrics_ptr->jitter = compute_ewma_signed(jitter, link_metrics_ptr->jitter);
-                *last_latency_ptr = latency;
-            }
 
-            
+            }
+            else
+            {
+                jitter = latency - *last_latency_ptr;
+
+                if (jitter!=0)
+                {
+                   link_metrics_ptr->counter += 1;
+                   link_metrics_ptr->tot_latency += latency;
+                   link_metrics_ptr->jitter = jitter;  //compute_ewma_signed(jitter, link_metrics_ptr->jitter);  //NEED to update the way to calculate the jitter!!!
+                   if (link_metrics_ptr->counter==10)
+                   {
+                     link_metrics_ptr->latency = link_metrics_ptr->tot_latency / link_metrics_ptr->counter;  //  compute_ewma_unsigned(latency, link_metrics_ptr->latency);  //DEPRECATED
+                     /*link_metrics_ptr->jitter = link_metrics_ptr->tot_latency - link_metrics_ptr->prev_tot_latency;*/  //DEPRECATED
+                     /*link_metrics_ptr->prev_tot_latency = link_metrics_ptr->tot_latency;*/  //DEPRECATED (related to jitter calculation)
+                     link_metrics_ptr->counter = 0;
+                     link_metrics_ptr->tot_latency = 0;
+                   }
+                }
+
+                *last_latency_ptr = latency;
+
+            }
         }
         return XDP_DROP;
     }

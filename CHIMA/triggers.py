@@ -66,7 +66,7 @@ def check_triggers(triggers):
         
         if t.j_max != None and total_jitter > t.j_max:
             take_timestamp("VARIATION")
-            print("TRIGGER! Variation %u>%u" % (lat_variation, t.v_max))
+#            print("TRIGGER! Variation %u>%u" % (lat_variation, t.v_max))
             react = True
         
         if react and t.deployment.next != None:

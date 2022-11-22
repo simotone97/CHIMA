@@ -33,7 +33,7 @@ with open('timestamps.txt') as f:
         
         res.write("\n\n\n")
 
-        s, ms, us, ns = split_time(times["PACKETS"], times["LATENCY"])
+        s, ms, us, ns = split_time(times["PACKETS"], times["LATENCY"])      ##BUG!!! raised exception: KeyError: 'LATENCY'
         res.write("Detection time:\t%us %ums %uus %uns\n" % (s, ms, us, ns))
 
         s, ms, us, ns = split_time(times["LATENCY"], times["REDEPLOYED"])
