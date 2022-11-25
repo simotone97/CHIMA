@@ -97,6 +97,11 @@ cd $CHIMA_ROOT/measurements
 sudo -E ./pre.exp
 ```
 
+- Run telegraf
+```
+sudo telegraf --config telegraf.conf
+```
+
 - Run desired tests using the provided expect script, with configurable parameters
 ```
 sudo -E ./test.exp [topology] [polling interval] [ewma coefficent]
