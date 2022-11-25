@@ -9,14 +9,14 @@ BPF_HASH(link_metrics_map, struct link_key_t, struct link_metrics_t, HASHMAP_LIN
 BPF_HASH(last_link_latency_map, struct link_key_t, uint32_t, HASHMAP_LINK_SIZE);
 /*
 static inline
-uint32_t compute_ewma_unsigned(uint32_t measure, uint32_t avg_measures) {          #############################################
-    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);      #                                           #
-                                                                                   #                                           #
-static inline                                                                      #                DEPRECATED                 #
-int32_t compute_ewma_signed(int32_t measure, int32_t avg_measures) {               #                                           #
-    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);      #                                           #
-}                                                                                  #############################################
-*/
+uint32_t compute_ewma_unsigned(uint32_t measure, uint32_t avg_measures) {
+    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);
+
+static inline
+int32_t compute_ewma_signed(int32_t measure, int32_t avg_measures) {
+    return (measure >> SHR_EWMA) + avg_measures - (avg_measures >> SHR_EWMA);
+}*/
+
 int collector(struct xdp_md *ctx) {
     void* data_end = (void*)(long)ctx->data_end;
     void* cursor = (void*)(long)ctx->data;
@@ -148,14 +148,15 @@ int collector(struct xdp_md *ctx) {
                 {
                    link_metrics_ptr->counter += 1;
                    link_metrics_ptr->tot_latency += latency;
-                   link_metrics_ptr->jitter = jitter;  //compute_ewma_signed(jitter, link_metrics_ptr->jitter);  //NEED to update the way to calculate the jitter!!!
+                   //link_metrics_ptr->jitter = compute_ewma_signed(jitter, link_metrics_ptr->jitter);  //NEED to update the way to calculate the jitter!!!
+                   //link_metrics_ptr->latency = latency;
                    if (link_metrics_ptr->counter==10)
                    {
-                     link_metrics_ptr->latency = link_metrics_ptr->tot_latency / link_metrics_ptr->counter;  //  compute_ewma_unsigned(latency, link_metrics_ptr->latency);  //DEPRECATED
-                     /*link_metrics_ptr->jitter = link_metrics_ptr->tot_latency - link_metrics_ptr->prev_tot_latency;*/  //DEPRECATED
-                     /*link_metrics_ptr->prev_tot_latency = link_metrics_ptr->tot_latency;*/  //DEPRECATED (related to jitter calculation)
-                     link_metrics_ptr->counter = 0;
-                     link_metrics_ptr->tot_latency = 0;
+                      link_metrics_ptr->avg_latency = link_metrics_ptr->tot_latency / link_metrics_ptr->counter;  //  compute_ewma_unsigned(latency, link_metrics_ptr->latency);  //DEPRECATED
+                      link_metrics_ptr->tot_jitter = link_metrics_ptr->tot_latency - link_metrics_ptr->prev_tot_latency;
+                      link_metrics_ptr->prev_tot_latency = link_metrics_ptr->tot_latency;
+                      link_metrics_ptr->counter = 0;
+                      link_metrics_ptr->tot_latency = 0;
                    }
                 }
 
