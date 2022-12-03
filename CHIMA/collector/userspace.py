@@ -57,11 +57,11 @@ class INT_collector(object):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         while True:
             try:
-                #current_time = time.time()
-                #wait_time = self.POLLING_INTERVAL - current_time % self.POLLING_INTERVAL
-                #time.sleep(wait_time)
+                current_time = time.time()
+                wait_time = self.POLLING_INTERVAL - current_time % self.POLLING_INTERVAL
+                time.sleep(wait_time)
 
-                for link_key, link_metrics in self.link_metrics_map.items_lookup_batch():
+                for link_key, link_metrics in self.link_metrics_map.items_lookup_and_delete_batch():
                     label = str(link_key.switch_id_1)+"_"+str(link_key.switch_id_2)
                     latency_label = "l_" + label
                     jitter_label = "j_" + label
@@ -76,17 +76,10 @@ class INT_collector(object):
                         # % (link_key.switch_id_1, link_key.switch_id_2, link_metrics.jitter))
 
                     ##Send metrics to telegraf socket_listener input plugin
-                    sock.sendto(json.dumps({'metric_name': 'latency %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'value1': link_metrics.avg_latency}).encode(),('localhost', 8094))
-                    sock.sendto(json.dumps({'metric_name': 'jitter %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'value1': link_metrics.tot_jitter / 10}).encode(),('localhost', 8094))
-
-               #     #resetting the metrics
-               #     keys=[link_metrics.tot_latency, link_metrics.counter]
-               #     values=[0,0]
-               #     keys_c= (ctypes.Structure(keys)) # * len(keys))(*keys)
-               #     values_c= (ctypes.c_uint32 * len(values))(*values)
-               #     self.link_metrics_map.items_update_batch(keys_c, values_c)
-               #     print (link_key.switch_id_1, link_key.switch_id_2, link_metrics.latency, link_metrics.jitter, link_metrics.counter)
-               #     print (link_metrics.tot_latency)
+                    if link_metrics.counter > 1:
+                      sock.sendto(json.dumps({'metric_name': 'latency %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'latency': link_metrics.tot_latency / link_metrics.counter}).encode(),('localhost', 8094))
+                      sock.sendto(json.dumps({'metric_name': 'jitter %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'jitter_mean': link_metrics.tot_jitter / (link_metrics.counter - 1), 'jitter_max': link_metrics.jitter_max, 'jitter_min': link_metrics.jitter_min}).encode(),('localhost', 8094))
+                      sock.sendto(json.dumps({'metric_name': 'contatore', 'value1': link_metrics.counter}).encode(),('localhost', 8094))
 
                     gauges[latency_label].set(link_metrics.latency)
                     gauges[jitter_label].set(link_metrics.jitter)
@@ -102,7 +95,7 @@ class INT_collector(object):
                     # logging.debug("LINK_KEY = (%u,%u) LATENCY = %u" \
                     # % (link_key.switch_id_1, link_key.switch_id_2, link_metrics.latency))
 
-                    #Perform a check to see if any trigger was exceeded
+                #Perform a check to see if any trigger was exceeded
                 deployment = check_triggers(triggers)
 
                 if deployment != None:

@@ -85,8 +85,15 @@ struct link_metrics_t {
   uint32_t tot_latency;
   uint32_t avg_latency;
   uint32_t prev_tot_latency;
-  int32_t tot_jitter;
-  int32_t jitter;
+  int32_t  tot_jitter;
+  int32_t  jitter;
+  int32_t  jitter_min;
+  int32_t  jitter_max;
   uint32_t counter;
   uint32_t alignment_padding;
 };
+/*
+struct counter_t {
+  uint32_t counter;
+};
+*/
