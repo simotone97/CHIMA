@@ -118,7 +118,7 @@ The available topologies are the following:
 
 Here is an example command to run a test on the _minimal_ topology:
 ```
-sudo -E ./test.exp minimal 0.1 3
+sudo -E ./test.exp minimal 3 3
 ```
 
 ### Collecting results
