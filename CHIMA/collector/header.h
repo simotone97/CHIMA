@@ -83,8 +83,8 @@ struct link_fed_key_t {
 struct link_metrics_t {
   uint32_t latency;
   uint32_t tot_latency;
-  uint32_t avg_latency;
-  uint32_t prev_tot_latency;
+  uint32_t latency_min;
+  uint32_t latency_max;
   int32_t  tot_jitter;
   int32_t  jitter;
   int32_t  jitter_min;

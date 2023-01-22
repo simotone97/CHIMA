@@ -77,7 +77,7 @@ class INT_collector(object):
 
                     ##Send metrics to telegraf socket_listener input plugin
                     if link_metrics.counter > 1:
-                      sock.sendto(json.dumps({'metric_name': 'latency %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'latency': link_metrics.tot_latency / link_metrics.counter}).encode(),('localhost', 8094))
+                      sock.sendto(json.dumps({'metric_name': 'latency %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'latency_mean': link_metrics.tot_latency / link_metrics.counter, 'latency_max': link_metrics.latency_max, 'latency_min': link_metrics.latency_min}).encode(),('localhost', 8094))
                       sock.sendto(json.dumps({'metric_name': 'jitter %s_%s' %(str(link_key.switch_id_1), str(link_key.switch_id_2)), 'jitter_mean': link_metrics.tot_jitter / (link_metrics.counter - 1), 'jitter_max': link_metrics.jitter_max, 'jitter_min': link_metrics.jitter_min}).encode(),('localhost', 8094))
                       sock.sendto(json.dumps({'metric_name': 'contatore', 'value1': link_metrics.counter}).encode(),('localhost', 8094))
 

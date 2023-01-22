@@ -144,21 +144,33 @@ int collector(struct xdp_md *ctx) {
             else
             {
                 jitter = abs(latency - *last_latency_ptr);
+                link_metrics_ptr->jitter = jitter;
 
-                if ((link_metrics_ptr->jitter_min == 0) || (link_metrics_ptr->jitter_max == 0))
+                if ((link_metrics_ptr->jitter_min == 0) && (link_metrics_ptr->jitter_max == 0) && (link_metrics_ptr->latency_min == 0) && (link_metrics_ptr->latency_max == 0))
                 {
                    link_metrics_ptr->jitter_min = jitter;
                    link_metrics_ptr->jitter_max = jitter;
+                   link_metrics_ptr->latency_min = latency;
+                   link_metrics_ptr->latency_max = latency;
                 }
-                else if (jitter < link_metrics_ptr->jitter_min)
+                else
+                {
+                     if (jitter < link_metrics_ptr->jitter_min)
                         link_metrics_ptr->jitter_min = jitter;
                      else if (jitter > link_metrics_ptr->jitter_max)
                              link_metrics_ptr->jitter_max = jitter;
+
+                     if (latency < link_metrics_ptr->latency_min)
+                        link_metrics_ptr->latency_min = latency;
+                     else if (latency > link_metrics_ptr->latency_max)
+                             link_metrics_ptr->latency_max = latency;
+                }
 
                 link_metrics_ptr->counter += 1;
                 link_metrics_ptr->tot_latency += latency;
                 link_metrics_ptr->tot_jitter += jitter;
                 *last_latency_ptr = latency;
+
             }
         }
         return XDP_DROP;
