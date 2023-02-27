@@ -8,7 +8,7 @@ This software and its dependencies have been tested on a fresh install of Ubuntu
 - Clone this repository
 ```
 cd
-git clone https://github.com/ANTLab-polimi/CHIMA
+git clone https://github.com/simotone97/CHIMA
 cd CHIMA
 ```
 
